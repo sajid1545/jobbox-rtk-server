@@ -127,15 +127,16 @@ const run = async () => {
 
 		app.get('/job/:id', async (req, res) => {
 			const id = req.params.id;
-
 			const result = await jobCollection.findOne({ _id: ObjectId(id) });
 			res.send({ status: true, data: result });
 		});
 
-		app.get('/job/:employerId', async (req, res) => {
-			const id = req.params.employerId;
+		app.get('/job/employer-jobs/:employerID', async (req, res) => {
+			const id = req.params.employerID;
 
-			const result = await jobCollection.findOne({ _id: ObjectId(id) });
+			const result = await jobCollection.findOne({
+				'employerInfo.id': `${ObjectId(id)}`,
+			});
 			res.send({ status: true, data: result });
 		});
 
