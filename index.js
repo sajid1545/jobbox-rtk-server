@@ -112,10 +112,10 @@ const run = async () => {
 
 		// for candidate replying to employer
 		app.patch('/candidate-reply', async (req, res) => {
-			const userId = req.body.userId;
+			const candidateId = req.body.candidateId;
 			const reply = req.body.reply;
 
-			const filter = { 'queries.employerId': ObjectId(userId) };
+			const filter = { 'queries.id': ObjectId(candidateId) };
 
 			const updateDoc = {
 				$push: {
@@ -123,7 +123,7 @@ const run = async () => {
 				},
 			};
 			const arrayFilter = {
-				arrayFilters: [{ 'user.id': ObjectId(userId) }],
+				arrayFilters: [{ 'user.id': ObjectId(candidateId) }],
 			};
 
 			const result = await userCollection.updateOne(filter, updateDoc, arrayFilter);
@@ -133,7 +133,6 @@ const run = async () => {
 
 			res.send({ status: false });
 		});
-
 
 		// employer texting to candidate
 		app.patch('/employer-text', async (req, res) => {
