@@ -86,10 +86,7 @@ const run = async () => {
 				return res.send({ status: true, data: result });
 			}
 
-			const cursor = jobCollection
-				.find(query)
-				.sort({ 'applicants.createdAt': 1 })
-				.project({ applicants: 0 });
+			const cursor = jobCollection.find(query).project({ applicants: 0 });
 			const result = await cursor.toArray();
 
 			res.send({ status: true, data: result });
