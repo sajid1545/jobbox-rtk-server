@@ -110,6 +110,60 @@ const run = async () => {
 			res.send({ status: false });
 		});
 
+		// for candidate replying to employer
+		app.patch('/candidate-reply', async (req, res) => {
+			const userId = req.body.userId;
+			const reply = req.body.reply;
+
+			const filter = { 'queries.employerId': ObjectId(userId) };
+
+			const updateDoc = {
+				$push: {
+					'queries.$[user].reply': reply,
+				},
+			};
+			const arrayFilter = {
+				arrayFilters: [{ 'user.id': ObjectId(userId) }],
+			};
+
+			const result = await userCollection.updateOne(filter, updateDoc, arrayFilter);
+			if (result.acknowledged) {
+				return res.send({ status: true, data: result });
+			}
+
+			res.send({ status: false });
+		});
+
+
+		// employer texting to candidate
+		app.patch('/employer-text', async (req, res) => {
+			const candidateId = req.body.candidateId;
+			const employerId = req.body.employerId;
+			const employerEmail = req.body.employerEmail;
+			const employerText = req.body.employerText;
+
+			const filter = { _id: ObjectId(candidateId) };
+			const updateDoc = {
+				$push: {
+					queries: {
+						id: ObjectId(candidateId),
+						employerId: employerId,
+						employerEmail: employerEmail,
+						employerText: employerText,
+						reply: [],
+					},
+				},
+			};
+
+			const result = await userCollection.updateOne(filter, updateDoc);
+
+			if (result?.acknowledged) {
+				return res.send({ status: true, data: result });
+			}
+
+			res.send({ status: false });
+		});
+
 		app.get('/applied-jobs/:email', async (req, res) => {
 			const email = req.params.email;
 			const query = { applicants: { $elemMatch: { email: email } } };
