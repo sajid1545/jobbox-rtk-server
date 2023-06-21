@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, Timestamp } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -46,9 +46,10 @@ const run = async () => {
 			const userId = req.body.userId;
 			const jobId = req.body.jobId;
 			const email = req.body.email;
+			var createdDt = new Date();
 			const filter = { _id: ObjectId(jobId) };
 			const updateDoc = {
-				$push: { applicants: { id: ObjectId(userId), email } },
+				$push: { applicants: { id: ObjectId(userId), email, createdAt: createdDt } },
 			};
 
 			const result = await jobCollection.updateOne(filter, updateDoc);
@@ -58,6 +59,40 @@ const run = async () => {
 			}
 
 			res.send({ status: false });
+		});
+
+		app.get('/applied-jobs/:email', async (req, res) => {
+			const email = req.params.email;
+			const query = { applicants: { $elemMatch: { email: email } } };
+			const queries = req.query.sort;
+
+			if (queries === 'firstApplied') {
+				const cursor = jobCollection
+					.find(query)
+					.sort({ 'applicants.createdAt': 1 })
+					.project({ applicants: 0 });
+				const result = await cursor.toArray();
+
+				return res.send({ status: true, data: result });
+			}
+
+			if (queries === 'lastApplied') {
+				const cursor = jobCollection
+					.find(query)
+					.sort({ 'applicants.createdAt': -1 })
+					.project({ applicants: 0 });
+				const result = await cursor.toArray();
+
+				return res.send({ status: true, data: result });
+			}
+
+			const cursor = jobCollection
+				.find(query)
+				.sort({ 'applicants.createdAt': 1 })
+				.project({ applicants: 0 });
+			const result = await cursor.toArray();
+
+			res.send({ status: true, data: result });
 		});
 
 		app.patch('/query', async (req, res) => {
@@ -161,15 +196,6 @@ const run = async () => {
 			}
 
 			res.send({ status: false });
-		});
-
-		app.get('/applied-jobs/:email', async (req, res) => {
-			const email = req.params.email;
-			const query = { applicants: { $elemMatch: { email: email } } };
-			const cursor = jobCollection.find(query).project({ applicants: 0 });
-			const result = await cursor.toArray();
-
-			res.send({ status: true, data: result });
 		});
 
 		app.get('/jobs', async (req, res) => {
