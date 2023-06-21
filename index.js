@@ -150,8 +150,8 @@ const run = async () => {
 			res.send({ status: true, data: result });
 		});
 
-		app.patch('/close-job', async (req, res) => {
-			const jobId = req.body.jobId;
+		app.patch('/close-job/:jobId', async (req, res) => {
+			const jobId = req.params.jobId;
 			const filter = { _id: ObjectId(jobId) };
 			const updatedDoc = {
 				$set: {
