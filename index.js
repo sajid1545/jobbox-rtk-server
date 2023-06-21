@@ -131,20 +131,34 @@ const run = async () => {
 			res.send({ status: true, data: result });
 		});
 
-		app.get('/job/employer-jobs/:employerID', async (req, res) => {
-			const id = req.params.employerID;
-
-			const result = await jobCollection.findOne({
-				'employerInfo.id': `${ObjectId(id)}`,
-			});
-			res.send({ status: true, data: result });
-		});
-
 		app.post('/job', async (req, res) => {
 			const job = req.body;
 
 			const result = await jobCollection.insertOne(job);
 
+			res.send({ status: true, data: result });
+		});
+
+		app.get('/job/employer-jobs/:employerID', async (req, res) => {
+			const id = req.params.employerID;
+
+			const result = await jobCollection
+				.find({
+					'employerInfo.id': `${ObjectId(id)}`,
+				})
+				.toArray();
+			res.send({ status: true, data: result });
+		});
+
+		app.patch('/close-job', async (req, res) => {
+			const jobId = req.body.jobId;
+			const filter = { _id: ObjectId(jobId) };
+			const updatedDoc = {
+				$set: {
+					jobStatus: 'closed',
+				},
+			};
+			const result = await jobCollection.updateOne(filter, updatedDoc);
 			res.send({ status: true, data: result });
 		});
 	} finally {
