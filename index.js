@@ -161,6 +161,12 @@ const run = async () => {
 			const result = await jobCollection.updateOne(filter, updatedDoc);
 			res.send({ status: true, data: result });
 		});
+
+		app.get('/candidate-details/:candidateId', async (req, res) => {
+			const candidateId = req.params.candidateId;
+			const result = await userCollection.findOne({ _id: ObjectId(candidateId) });
+			res.send({ status: true, data: result });
+		});
 	} finally {
 	}
 };
