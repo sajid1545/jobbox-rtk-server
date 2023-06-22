@@ -61,6 +61,28 @@ const run = async () => {
 			res.send({ status: false });
 		});
 
+		app.patch('/approve', async (req, res) => {
+			const jobId = req.body.jobId;
+			const candidateEmail = req.body.candidateEmail;
+
+			const filter = { _id: ObjectId(jobId) };
+			const updatedDoc = {
+				$push: {
+					approved: {
+						email: candidateEmail,
+						approved: true,
+					},
+				},
+			};
+			const result = await jobCollection.updateOne(filter, updatedDoc);
+
+			if (result.acknowledged) {
+				return res.send({ status: true, data: result });
+			}
+
+			res.send({ status: false });
+		});
+
 		app.get('/applied-jobs/:email', async (req, res) => {
 			const email = req.params.email;
 			const query = { applicants: { $elemMatch: { email: email } } };
@@ -86,7 +108,10 @@ const run = async () => {
 				return res.send({ status: true, data: result });
 			}
 
-			const cursor = jobCollection.find(query).project({ applicants: 0 });
+			const cursor = jobCollection
+				.find(query)
+				.sort({ 'applicants.createdAt': 1 })
+				.project({ applicants: 0 });
 			const result = await cursor.toArray();
 
 			res.send({ status: true, data: result });
